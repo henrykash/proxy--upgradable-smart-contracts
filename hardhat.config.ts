@@ -1,8 +1,31 @@
 import { HardhatUserConfig } from "hardhat/config";
+import "@openzeppelin/hardhat-upgrades";
 import "@nomicfoundation/hardhat-toolbox";
 
+
+require("dotenv").config();
+
 const config: HardhatUserConfig = {
-  solidity: "0.8.18",
+  solidity: {
+    version: "0.8.19",
+
+    settings: {
+      optimizer: {
+        enabled: true,
+        runs: 200,
+      }
+    }
+  },
+
+  networks: {
+    goerli: {
+      url: process.env.ALCHEMY_GOERLI_URL,
+      accounts: [process.env.GOERLI_PRIVATE_KEY!]
+    }
+  },
+  etherscan: {
+    apiKey: process.env.ETHERSCAN_KEY!
+  }
 };
 
 export default config;
