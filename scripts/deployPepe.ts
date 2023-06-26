@@ -4,8 +4,8 @@ async function main() {
   
 
 
-  const Pepe = await ethers.getContractFactory("Pepe");
-  const pepe = await Pepe.deploy();
+  const Lock = await ethers.getContractFactory("Pepe");
+  const pepe = await Lock.deploy();
 
   await pepe.deployed();
 

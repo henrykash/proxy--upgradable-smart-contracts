@@ -7,7 +7,7 @@ require("dotenv").config();
 
 const config: HardhatUserConfig = {
   solidity: {
-    version: "0.8.19",
+    version: "0.8.9",
 
     settings: {
       optimizer: {
@@ -18,7 +18,7 @@ const config: HardhatUserConfig = {
   },
 
   networks: {
-    goerli: {
+    serpolia: {
       url: process.env.ALCHEMY_GOERLI_URL,
       accounts: [process.env.GOERLI_PRIVATE_KEY!]
     }
