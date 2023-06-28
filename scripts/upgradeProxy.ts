@@ -1,7 +1,7 @@
 import { ethers, upgrades } from 'hardhat';
 
 // TO DO: Place the address of your proxy here!
-const proxyAddress = '0xE03d24d012Ad4569Ccf09A0C9e4aAF9b390Ed732';
+const proxyAddress = '0xe5f51EbdC500941f443E2B46a65877d13A6B2b28';
 
 async function main() {
 
@@ -14,7 +14,7 @@ async function main() {
                 proxyAddress
             );
 
-            console.log("The current contract owner is: " + upgraded.owner());
+            console.log("The current contract owner is: " + await upgraded.owner());
             console.log('Implementation contract address: ' + implementationAddress);
         }
 
