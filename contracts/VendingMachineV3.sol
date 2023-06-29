@@ -2,7 +2,7 @@
 pragma solidity 0.8.9;
 import "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol";
 
-contract VendingMachineV2 is Initializable {
+contract VendingMachineV3 is Initializable {
     // these state variables and their values
     // will be preserved forever, regardless of upgrading
     uint public numSodas;
