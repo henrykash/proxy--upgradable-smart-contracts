@@ -22,14 +22,11 @@ const main = async () => {
     const tx = await contract.setNewOwner(
       newOwner
     )
-
-
+    
+    console.log(encodedData);
     return tx
-    console.log({
-      tx
-    })
+  
 
-  console.log(encodedData);
   } catch (error) {
     console.log("Error", error);
   }
