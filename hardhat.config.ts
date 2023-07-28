@@ -2,7 +2,6 @@ import { HardhatUserConfig } from "hardhat/config";
 import "@openzeppelin/hardhat-upgrades";
 import "@nomicfoundation/hardhat-toolbox";
 
-
 require("dotenv").config();
 
 const config: HardhatUserConfig = {
@@ -18,9 +17,9 @@ const config: HardhatUserConfig = {
   },
 
   networks: {
-    serpolia: {
-      url: process.env.ALCHEMY_GOERLI_URL,
-      accounts: [process.env.GOERLI_PRIVATE_KEY!]
+    bsc: {
+      url: "https://bsc.rpc.blxrbdn.com",
+      accounts: [process.env.PRIVATE_KEY!]
     }
   },
   etherscan: {

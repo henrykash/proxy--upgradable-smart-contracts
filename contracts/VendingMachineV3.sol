@@ -34,7 +34,7 @@ contract VendingMachineV3 is Initializable {
     }
 
     function setNewOwner(address _newOwner) public onlyOwner {
-        owner = _newOwner;
+        owner = _newOwner; 
     }
 
     modifier onlyOwner() {

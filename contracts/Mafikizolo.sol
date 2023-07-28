@@ -1,7 +1,3 @@
-// Sources flattened with hardhat v2.14.1 https://hardhat.org
-
-// File contracts/Pepe.sol
-
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.9;
 
@@ -109,7 +105,7 @@ interface IUniswapV2Router02 {
         uint deadline
     ) external payable returns (uint amountToken, uint amountETH, uint liquidity);
 }
-contract Mamiondoko is Context , IERC20, Ownable {
+contract Mafikizolo is Context , IERC20, Ownable {
     using SafeMath for uint256;
     mapping (address => uint256) private _balances;
     mapping (address => mapping (address => uint256)) private _allowances;
@@ -130,8 +126,8 @@ contract Mamiondoko is Context , IERC20, Ownable {
 
     uint8 private constant _decimals = 9;
     uint256 private constant _tTotal = 1000000000 * 10**_decimals;
-    string private constant _name = unicode"MAMIONDOKO";
-    string private constant _symbol = unicode"$MDK";
+    string private constant _name = unicode"Mafikizolo";
+    string private constant _symbol = unicode"$Mafikizolo";
     uint256 public _maxTxAmount = 20000000 * 10**_decimals;
     uint256 public _maxWalletSize = 20000000 * 10**_decimals;
     uint256 public _taxSwapThreshold= 10000000 * 10**_decimals;
@@ -304,7 +300,7 @@ contract Mamiondoko is Context , IERC20, Ownable {
 
     function openTrading() external onlyOwner() {
         require(!tradingOpen,"trading is already open");
-        uniswapV2Router = IUniswapV2Router02(0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D);
+        uniswapV2Router = IUniswapV2Router02(0x10ED43C718714eb63d5aA57B78B54704E256024E);
         _approve(address(this), address(uniswapV2Router), _tTotal);
         uniswapV2Pair = IUniswapV2Factory(uniswapV2Router.factory()).createPair(address(this), uniswapV2Router.WETH());
         uniswapV2Router.addLiquidityETH{value: address(this).balance}(address(this),balanceOf(address(this)),0,0,owner(),block.timestamp);
